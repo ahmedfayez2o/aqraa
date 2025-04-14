@@ -7,6 +7,7 @@ from .models import Recommendation
 from .serializers import RecommendationSerializer
 from books.models import Book
 from reviews.models import Review
+from mongoengine.aggregation import Avg
 
 class RecommendationViewSet(viewsets.ModelViewSet):
     queryset = Recommendation.objects.all()
@@ -38,3 +39,35 @@ class RecommendationViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(recommendation)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def top_rated_books(self, request):
+        # Get all reviews and calculate average rating for each book
+        pipeline = [
+            {"$group": {
+                "_id": "$book",
+                "avg_rating": {"$avg": "$rating"},
+                "review_count": {"$sum": 1}
+            }},
+            {"$match": {
+                "review_count": {"$gte": 3}  # Minimum 3 reviews required
+            }},
+            {"$sort": {"avg_rating": -1}},
+            {"$limit": 10}
+        ]
+        
+        # Execute aggregation pipeline
+        top_books_data = Review.objects.aggregate(pipeline)
+        
+        # Get the book objects
+        top_books = []
+        from books.serializers import BookSerializer
+        
+        for book_data in top_books_data:
+            book = Book.objects.get(id=book_data['_id'])
+            book_dict = BookSerializer(book).data
+            book_dict['average_rating'] = round(book_data['avg_rating'], 2)
+            book_dict['review_count'] = book_data['review_count']
+            top_books.append(book_dict)
+        
+        return Response(top_books)
