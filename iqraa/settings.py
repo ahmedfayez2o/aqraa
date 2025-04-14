@@ -42,8 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', 'rest_framework',
-    'djongo',
+    'django.contrib.staticfiles',
+    'rest_framework',
     'users',
     'books',
     'orders',
@@ -82,12 +82,16 @@ WSGI_APPLICATION = 'iqraa.wsgi.application'
 
 
 # MongoDB configuration using mongoengine
-MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'iqraa_db')
-MONGO_DB_HOST = os.getenv('MONGO_DB_HOST', '')
+MONGODB_SETTINGS = {
+    'db': os.getenv('MONGO_DB_NAME', 'iqraa_db'),
+    'host': os.getenv('MONGO_DB_HOST', 'localhost'),
+    'port': int(os.getenv('MONGO_DB_PORT', 27017)),
+}
 
 mongoengine.connect(
-    db=MONGO_DB_NAME,
-    host=MONGO_DB_HOST
+    db=MONGODB_SETTINGS['db'],
+    host=MONGODB_SETTINGS['host'],
+    port=MONGODB_SETTINGS['port']
 )
 
 
