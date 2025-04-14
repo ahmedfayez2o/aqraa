@@ -11,6 +11,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import mongoengine
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from a .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -75,19 +81,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'iqraa.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# MongoDB configuration using mongoengine
+MONGO_DB_NAME = os.getenv('MONGO_DB_NAME', 'iqraa_db')
+MONGO_DB_HOST = os.getenv('MONGO_DB_HOST', '')
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'iqraa_db',
-        'ENFORCE_SCHEMA': True,
-        'CLIENT': {
-            'host': 'mongodb+srv://ahmedfayezd620:FRvaqQvvqDM65oKI@ac-ocjijbz-shard-00-00.v8kv2fl.mongodb.net,ac-ocjijbz-shard-00-01.v8kv2fl.mongodb.net,ac-ocjijbz-shard-00-02.v8kv2fl.mongodb.net/?replicaSet=atlas-urnvii-shard-0&ssl=true&authSource=admin&retryWrites=true&w=majority',
-        },
-    }
-}
+mongoengine.connect(
+    db=MONGO_DB_NAME,
+    host=MONGO_DB_HOST
+)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
