@@ -5,12 +5,20 @@ from rest_framework.response import Response
 from django.utils import timezone
 from .models import Review
 from .serializers import ReviewSerializer
+from recommendations.ml_model import SentimentAnalyzer
 
 # Create your views here.
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    _sentiment_analyzer = None
+
+    @property
+    def sentiment_analyzer(self):
+        if self._sentiment_analyzer is None:
+            self._sentiment_analyzer = SentimentAnalyzer()
+        return self._sentiment_analyzer
 
     def get_queryset(self):
         queryset = Review.objects.all()
@@ -71,3 +79,31 @@ class ReviewViewSet(viewsets.ModelViewSet):
         reviews = Review.objects.filter(rating=5)
         serializer = self.get_serializer(reviews, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def sentiment(self, request, pk=None):
+        """Get sentiment analysis for a specific review"""
+        review = self.get_object()
+        if not review.comment:
+            return Response({"sentiment": 0.0, "message": "No comment to analyze"})
+            
+        sentiment = self.sentiment_analyzer.analyze_sentiment(review.comment)
+        return Response({
+            "sentiment": sentiment,
+            "interpretation": "positive" if sentiment >= 0.05 
+                            else "negative" if sentiment <= -0.05 
+                            else "neutral"
+        })
+
+    @action(detail=False, methods=['get'])
+    def book_sentiments(self, request):
+        """Get sentiment analysis for all reviews of a book"""
+        book_id = request.query_params.get('book', None)
+        if not book_id:
+            return Response(
+                {"detail": "Book ID is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        analysis = self.sentiment_analyzer.analyze_book_reviews(book_id)
+        return Response(analysis)
