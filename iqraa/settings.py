@@ -14,6 +14,7 @@ from pathlib import Path
 import mongoengine
 from dotenv import load_dotenv
 import os
+from datetime import timedelta
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -26,12 +27,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-akt#ed670-j8zccewy8(#=0@vd4-4^gb0fyodqetiorp7-9$&('
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-akt#ed670-j8zccewy8(#=0@vd4-4^gb0fyodqetiorp7-9$&(')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -44,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
+    'django_filters',
     'users',
     'books',
     'orders',
@@ -53,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,17 +85,35 @@ TEMPLATES = [
 WSGI_APPLICATION = 'iqraa.wsgi.application'
 
 
+# CORS settings
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')
+CORS_ALLOW_CREDENTIALS = True
+
+# Rest Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+# Security settings
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
 # MongoDB configuration using mongoengine
 MONGODB_SETTINGS = {
     'db': os.getenv('MONGO_DB_NAME', 'iqraa_db'),
-    'host': os.getenv('MONGO_DB_HOST', 'localhost'),
-    'port': int(os.getenv('MONGO_DB_PORT', 27017)),
+    'host': os.getenv('MONGO_DB_HOST', 'mongodb://localhost:27017'),
 }
 
 mongoengine.connect(
     db=MONGODB_SETTINGS['db'],
     host=MONGODB_SETTINGS['host'],
-    port=MONGODB_SETTINGS['port']
 )
 
 

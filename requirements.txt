@@ -11,3 +11,6 @@ pandas
 scikit-learn
 joblib
 nltk
+django-cors-headers
+django-filter
+gunicorn
