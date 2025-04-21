@@ -12,3 +12,5 @@ nltk
 django-cors-headers
 django-filter
 gunicorn
+mongoengine
+pymongo
