@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-import mongoengine
 from dotenv import load_dotenv
 import os
 from datetime import timedelta
@@ -105,16 +104,21 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
-# MongoDB configuration using mongoengine
-MONGODB_SETTINGS = {
-    'db': os.getenv('MONGO_DB_NAME', 'iqraa_db'),
-    'host': os.getenv('MONGO_DB_HOST', 'mongodb://localhost:27017'),
-}
+# Custom user model
+AUTH_USER_MODEL = 'users.CustomUser'
 
-mongoengine.connect(
-    db=MONGODB_SETTINGS['db'],
-    host=MONGODB_SETTINGS['host'],
-)
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'iqraa_db'),
+        'USER': os.getenv('DB_USER', 'postgres'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+    }
+}
 
 
 # Password validation
