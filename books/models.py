@@ -23,8 +23,8 @@ class Book(models.Model):
         ('DE', 'German')
     ]
 
-    title = models.CharField(max_length=255)
-    author = models.CharField(max_length=255)
+    title = models.CharField(max_length=1000)
+    author = models.CharField(max_length=1000)
     genre = models.CharField(max_length=100)
     categories = models.ManyToManyField(Category, related_name='books')
     isbn = models.CharField(max_length=20, unique=True)
