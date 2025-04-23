@@ -149,7 +149,7 @@ For detailed API documentation, you can use Django REST Framework's built-in doc
 Please read our contributing guidelines before submitting pull requests.
 
 ## License
-This project is licensed under the MIT License.
+This project is licensed under the FCDS License.
 
 # this is final gradution project backend #
 all the steps to make this up will be in the this file
