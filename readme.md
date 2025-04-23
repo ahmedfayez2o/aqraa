@@ -1,16 +1,17 @@
 # Iqraa - Book Management System Backend
 
 ## Project Overview
-Iqraa is a comprehensive book management system built with Django REST Framework and MongoDB. The system provides features for managing books, user accounts, orders (borrowing/purchasing), reviews, and personalized book recommendations.
+Iqraa is a comprehensive book management system built with Django REST Framework and PostgreSQL. The system provides features for managing books, user accounts, orders (borrowing/purchasing), reviews, and personalized book recommendations.
 
 ## Technology Stack
 - **Framework**: Django REST Framework
-- **Database**: MongoDB (using mongoengine)
+- **Database**: PostgreSQL
 - **Authentication**: JWT (JSON Web Tokens)
 - **Additional Features**: 
   - Sentiment Analysis for book reviews
   - Machine Learning-based book recommendations
   - CORS support for frontend integration
+  - Docker containerization
 
 ## Project Structure
 ```
@@ -87,7 +88,15 @@ iqraa/
 
 ## Setup Instructions
 
-1. **Environment Setup**
+1. **Using Docker (Recommended)**
+   ```bash
+   # Build and start the containers
+   docker-compose up --build
+
+   # The application will be available at http://localhost:8000
+   ```
+
+2. **Manual Setup (Alternative)**
    ```bash
    # Create virtual environment
    python -m venv venv
@@ -98,23 +107,20 @@ iqraa/
    pip install -r requirements.txt
    ```
 
-2. **Environment Variables**
-   Create a `.env` file with:
+3. **Environment Variables**
+   The following environment variables are configured in docker-compose.yml:
    ```
-   DJANGO_SECRET_KEY=your_secret_key
-   DEBUG=True
-   ALLOWED_HOSTS=localhost,127.0.0.1
-   MONGO_DB_NAME=iqraa_db
-   MONGO_DB_HOST=mongodb://localhost:27017
-   CORS_ALLOWED_ORIGINS=http://localhost:3000
+   DATABASE_URL=postgresql://postgres:postgres@db:5432/iqraa_db
+   DJANGO_SETTINGS_MODULE=iqraa.settings
    ```
 
-3. **Database Setup**
-   - Install and start MongoDB
-   - The system will automatically create necessary collections
+4. **Database Setup**
+   - When using Docker, PostgreSQL is automatically configured
+   - For manual setup, configure PostgreSQL according to the settings in docker-compose.yml
 
-4. **Run Development Server**
+5. **Run Development Server (for manual setup)**
    ```bash
+   python manage.py migrate
    python manage.py runserver
    ```
 
@@ -122,7 +128,7 @@ iqraa/
 See `requirements.txt` for complete list:
 - Django
 - Django REST Framework
-- mongoengine
+- psycopg2-binary
 - django-cors-headers
 - scikit-learn (for ML features)
 - nltk (for sentiment analysis)
