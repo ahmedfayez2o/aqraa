@@ -21,35 +21,44 @@ class Command(BaseCommand):
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 try:
-                    if not row.get('isbn'):
+                    if not row.get('Id'):  # Changed from isbn to Id
                         continue
 
-                    # Convert ratings to proper format
-                    average_rating = float(row['average_rating']) if row['average_rating'] else 0
-                    ratings_count = int(float(row['ratings_count'])) if row['ratings_count'] else 0
-                    
-                    # Get publication year
+                    # Convert price to decimal if exists, otherwise use default
                     try:
-                        pub_year = int(float(row['original_publication_year'])) if row['original_publication_year'] else None
-                        pub_date = datetime(pub_year, 1, 1).date() if pub_year else None
+                        price = Decimal(str(row['Price'])) if row.get('Price') else Decimal('19.99')
                     except (ValueError, TypeError):
-                        pub_date = None
+                        price = Decimal('19.99')
+
+                    # Convert published date
+                    try:
+                        published_date = datetime.strptime(row['publishedDate'], '%Y-%m-%d').date() if row.get('publishedDate') else None
+                    except (ValueError, TypeError):
+                        published_date = None
+
+                    # Convert ratings count
+                    try:
+                        ratings_count = int(float(row['ratingsCount'])) if row.get('ratingsCount') else 0
+                    except (ValueError, TypeError):
+                        ratings_count = 0
 
                     # Create or update book
                     book, created = Book.objects.update_or_create(
-                        isbn=row['isbn'],
+                        isbn=row['Id'],  # Using Id as ISBN
                         defaults={
-                            'title': row['title'].strip(),
-                            'author': row['authors'].strip(),
-                            'genre': 'Fiction',  # Default genre
-                            'price': Decimal('19.99'),  # Default price
+                            'title': row['Title'].strip() if row.get('Title') else '',
+                            'description': row['description'].strip() if row.get('description') else '',
+                            'authors': row['authors'].strip() if row.get('authors') else '',
+                            'image': row['image'] if row.get('image') else '',
+                            'preview_link': row['previewLink'] if row.get('previewLink') else '',
+                            'info_link': row['infoLink'] if row.get('infoLink') else '',
+                            'publisher': row['publisher'].strip() if row.get('publisher') else '',
+                            'published_date': published_date,
+                            'price': price,
                             'stock': 10,  # Default stock
-                            'summary': row.get('original_title', ''),
-                            'cover_image': row['image_url'] if row['image_url'] else '',
-                            'publication_date': pub_date,
-                            'language': 'EN' if row.get('language_code', '').lower().startswith('en') else 'AR',
-                            'average_rating': average_rating,
-                            'total_ratings': ratings_count
+                            'language': 'EN',  # Default language
+                            'ratings_count': ratings_count,
+                            'average_rating': 0  # Will be calculated from reviews
                         }
                     )
 
@@ -61,7 +70,7 @@ class Command(BaseCommand):
                 except Exception as e:
                     self.stdout.write(
                         self.style.ERROR(
-                            f'Error importing book: {row.get("title", "Unknown")} - {str(e)}'
+                            f'Error importing book: {row.get("Title", "Unknown")} - {str(e)}'
                         )
                     )
 
