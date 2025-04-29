@@ -14,3 +14,4 @@ django-filter
 gunicorn
 mongoengine
 pymongo
+coreapi==2.3.3
