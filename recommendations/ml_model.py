@@ -7,10 +7,6 @@ from books.models import Book
 from reviews.models import Review
 from orders.models import Order 
 from .models import ModelData
-import nltk
-from nltk.sentiment import SentimentIntensityAnalyzer
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
 import json
 
 class BookRecommender:
@@ -195,91 +191,3 @@ class BookRecommender:
             
         except IndexError:
             raise ValueError("Book ID not found")
-
-class SentimentAnalyzer:
-    MODEL_NAME = 'sentiment_analyzer'
-    
-    def __init__(self):
-        self._initialize_nltk()
-        self.sentiment_analyzer = SentimentIntensityAnalyzer()
-        self.stop_words = set(stopwords.words('english'))
-        
-    def _initialize_nltk(self):
-        """Download required NLTK data"""
-        try:
-            nltk.data.find('sentiment/vader_lexicon.zip')
-            nltk.data.find('tokenizers/punkt')
-            nltk.data.find('corpora/stopwords')
-        except LookupError:
-            nltk.download('vader_lexicon')
-            nltk.download('punkt')
-            nltk.download('stopwords')
-        
-    def preprocess_text(self, text):
-        """Preprocess text for sentiment analysis"""
-        if not text:
-            return ""
-            
-        # Tokenize
-        tokens = word_tokenize(text.lower())
-        
-        # Remove stopwords and non-alphabetic tokens
-        tokens = [token for token in tokens 
-                 if token not in self.stop_words and token.isalpha()]
-                 
-        return " ".join(tokens)
-        
-    def analyze_sentiment(self, text):
-        """Analyze the sentiment of a given text"""
-        if not text:
-            return 0.0
-            
-        # Preprocess the text
-        processed_text = self.preprocess_text(text)
-        if not processed_text:
-            return 0.0
-            
-        # Get sentiment scores
-        scores = self.sentiment_analyzer.polarity_scores(processed_text)
-        return scores['compound']
-        
-    def analyze_book_reviews(self, book_id):
-        """Analyze all reviews for a specific book"""
-        reviews = Review.objects.filter(book_id=book_id)
-        if not reviews:
-            return {
-                'average_sentiment': 0.0,
-                'sentiment_distribution': {
-                    'positive': 0,
-                    'neutral': 0,
-                    'negative': 0
-                },
-                'total_reviews': 0,
-                'reviews_analyzed': 0
-            }
-        
-        sentiments = []
-        distribution = {'positive': 0, 'neutral': 0, 'negative': 0}
-        
-        for review in reviews:
-            if review.comment:
-                processed_text = self.preprocess_text(review.comment)
-                sentiment = self.analyze_sentiment(processed_text)
-                sentiments.append(sentiment)
-                
-                if sentiment >= 0.05:
-                    distribution['positive'] += 1
-                elif sentiment <= -0.05:
-                    distribution['negative'] += 1
-                else:
-                    distribution['neutral'] += 1
-        
-        # Calculate average sentiment
-        avg_sentiment = sum(sentiments) / len(sentiments) if sentiments else 0
-        
-        return {
-            'average_sentiment': round(avg_sentiment, 2),
-            'sentiment_distribution': distribution,
-            'total_reviews': len(reviews),
-            'reviews_analyzed': len(sentiments)
-        }
